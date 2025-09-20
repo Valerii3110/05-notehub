@@ -1,4 +1,3 @@
-// src/hooks/useNotes.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchNotes, createNote, deleteNote } from '../../services/noteService';
 import type { Note, NoteTag } from '../../types/note';
