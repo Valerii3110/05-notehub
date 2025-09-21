@@ -1,72 +1,83 @@
 import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { useCreateNote } from '../hooks/useNotes';
-import type { NoteTag } from '../../types/note';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createNote } from '../../services/noteService';
+import type { CreateNoteData } from '../../types/note';
 import css from './NoteForm.module.css';
 
 interface NoteFormProps {
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
-const VALID_TAGS: NoteTag[] = ['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'];
-
 const validationSchema = Yup.object({
-  title: Yup.string().min(3).max(50).required('Title is required'),
-  content: Yup.string().max(500),
-  tag: Yup.mixed<NoteTag>().oneOf(VALID_TAGS).required('Tag is required'),
+  title: Yup.string().required('Title is required'),
+  content: Yup.string().required('Content is required'),
+  tag: Yup.mixed<'work' | 'personal' | 'study'>().oneOf(
+    ['work', 'personal', 'study'],
+    'Invalid tag',
+  ),
 });
 
 const NoteForm: React.FC<NoteFormProps> = ({ onSuccess, onCancel }) => {
-  const createNoteMutation = useCreateNote();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (newNote: CreateNoteData) => createNote(newNote),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onSuccess();
+    },
+  });
+
+  const initialValues: CreateNoteData = {
+    title: '',
+    content: '',
+    tag: 'work',
+  };
 
   return (
     <Formik
-      initialValues={{ title: '', content: '', tag: 'Todo' as NoteTag }}
+      initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={async (values, { resetForm }) => {
-        await createNoteMutation.mutateAsync(values);
+      onSubmit={(values, { resetForm }) => {
+        mutation.mutate(values);
         resetForm();
-        onSuccess?.();
       }}
     >
-      {({ isSubmitting }) => (
-        <Form className={css.form}>
-          <div className={css.formGroup}>
-            <label htmlFor="title">Title</label>
-            <Field id="title" name="title" className={css.input} />
-            <ErrorMessage name="title" component="span" className={css.error} />
-          </div>
+      <Form className={css.form}>
+        <label>
+          Title:
+          <Field type="text" name="title" />
+          <ErrorMessage name="title" component="span" className={css.error} />
+        </label>
 
-          <div className={css.formGroup}>
-            <label htmlFor="content">Content</label>
-            <Field as="textarea" id="content" name="content" rows={8} className={css.textarea} />
-            <ErrorMessage name="content" component="span" className={css.error} />
-          </div>
+        <label>
+          Content:
+          <Field as="textarea" name="content" />
+          <ErrorMessage name="content" component="span" className={css.error} />
+        </label>
 
-          <div className={css.formGroup}>
-            <label htmlFor="tag">Tag</label>
-            <Field as="select" id="tag" name="tag" className={css.select}>
-              {VALID_TAGS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </Field>
-            <ErrorMessage name="tag" component="span" className={css.error} />
-          </div>
+        <label>
+          Tag:
+          <Field as="select" name="tag">
+            <option value="work">Work</option>
+            <option value="personal">Personal</option>
+            <option value="study">Study</option>
+          </Field>
+          <ErrorMessage name="tag" component="span" className={css.error} />
+        </label>
 
-          <div className={css.actions}>
-            <button type="button" onClick={() => onCancel?.()} className={css.cancelButton}>
-              Cancel
-            </button>
-            <button type="submit" disabled={isSubmitting} className={css.submitButton}>
-              Create Note
-            </button>
-          </div>
-        </Form>
-      )}
+        <div className={css.actions}>
+          <button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Saving...' : 'Save'}
+          </button>
+          <button type="button" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </Form>
     </Formik>
   );
 };
