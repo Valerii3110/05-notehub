@@ -47,21 +47,21 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSuccess, onCancel }) => {
       }}
     >
       <Form className={css.form}>
-        <label>
+        <label className={css.formGroup}>
           Title:
-          <Field type="text" name="title" />
+          <Field type="text" name="title" className={css.input} />
           <ErrorMessage name="title" component="span" className={css.error} />
         </label>
 
-        <label>
+        <label className={css.formGroup}>
           Content:
-          <Field as="textarea" name="content" />
+          <Field as="textarea" name="content" className={css.textarea} />
           <ErrorMessage name="content" component="span" className={css.error} />
         </label>
 
-        <label>
+        <label className={css.formGroup}>
           Tag:
-          <Field as="select" name="tag">
+          <Field as="select" name="tag" className={css.select}>
             <option value="work">Work</option>
             <option value="personal">Personal</option>
             <option value="study">Study</option>
@@ -70,10 +70,10 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSuccess, onCancel }) => {
         </label>
 
         <div className={css.actions}>
-          <button type="submit" disabled={mutation.isPending}>
+          <button type="submit" className={css.submitButton} disabled={mutation.isPending}>
             {mutation.isPending ? 'Saving...' : 'Save'}
           </button>
-          <button type="button" onClick={onCancel}>
+          <button type="button" className={css.cancelButton} onClick={onCancel}>
             Cancel
           </button>
         </div>

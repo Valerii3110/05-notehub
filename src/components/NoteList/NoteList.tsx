@@ -28,13 +28,16 @@ const NoteList: React.FC<NoteListProps> = ({ notes }) => {
         <li key={note.id} className={css.item}>
           <h3>{note.title}</h3>
           <p>{note.content}</p>
-          <span className={css.tag}>{note.tag}</span>
-          <button
-            onClick={() => deleteMutation.mutate(note.id)}
-            disabled={deleteMutation.isPending}
-          >
-            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-          </button>
+          <div className={css.footer}>
+            <span className={css.tag}>{note.tag}</span>
+            <button
+              className={css.button}
+              onClick={() => deleteMutation.mutate(note.id)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
         </li>
       ))}
     </ul>
